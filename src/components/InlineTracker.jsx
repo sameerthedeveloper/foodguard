@@ -12,7 +12,9 @@ const InlineTracker = ({ order, onPayNow, viewSide }) => {
 
   useEffect(() => {
     if (!order || order.status === 'delivered') return;
-    const start = new Date(order.createdAt).getTime();
+    // Use the timestamp when the current status was reached
+    const currentStatusEntry = order.statusHistory?.find(h => h.status === order.status);
+    const start = new Date(currentStatusEntry?.timestamp || order.createdAt).getTime();
     const interval = setInterval(() => {
       setElapsed(Math.floor((Date.now() - start) / 1000));
     }, 1000);

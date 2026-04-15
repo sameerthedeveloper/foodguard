@@ -100,9 +100,32 @@ export const seedDemoData = async () => {
 
     console.log('🌱 Seeding demo data...');
 
-    for (const d of SAMPLE_DONATIONS) await db.addDoc('donations', d);
-    for (const r of SAMPLE_REQUESTS) await db.addDoc('requests', r);
-    await db.addDoc('orders', SAMPLE_ORDER);
+    const donationIds = [];
+    for (const d of SAMPLE_DONATIONS) {
+      const res = await db.addDoc('donations', d);
+      donationIds.push(res.id);
+    }
+
+    const requestIds = [];
+    for (const r of SAMPLE_REQUESTS) {
+      const res = await db.addDoc('requests', r);
+      requestIds.push(res.id);
+    }
+
+    // Link the sample order to the first seed donation and request
+    const orderToSeed = {
+      ...SAMPLE_ORDER,
+      donationId: donationIds[0],
+      requestId: requestIds[0],
+      donorLocation: SAMPLE_DONATIONS[0].location,
+      receiverLocation: SAMPLE_REQUESTS[0].location,
+    };
+
+    const orderRes = await db.addDoc('orders', orderToSeed);
+
+    // Update the matched donation and request with the orderId
+    await db.updateDoc('donations', donationIds[0], { matched: true, orderId: orderRes.id });
+    await db.updateDoc('requests', requestIds[0], { matched: true, orderId: orderRes.id });
 
     console.log('✅ Demo data seeded');
     return true;

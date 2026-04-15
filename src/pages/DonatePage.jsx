@@ -18,6 +18,17 @@ const DonatePage = ({ donations, requests, orders, selectedMarker, setSelectedMa
   const [selectedReceiver, setSelectedReceiver] = useState(null);
   const [showPayment, setShowPayment] = useState(null);
   const [impactOpen, setImpactOpen] = useState(false);
+  const [latestDonationId, setLatestDonationId] = useState(null);
+
+  // Update latest donation ID when list changes
+  useEffect(() => {
+    const userDons = user?.id ? donations.filter(d => d.userId === user.id) : [];
+    const myDons = userDons.length > 0 ? userDons : donations;
+    const latest = myDons.filter(d => !d.matched).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+    if (latest && latest.id !== latestDonationId) {
+      setLatestDonationId(latest.id);
+    }
+  }, [donations, user, latestDonationId]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -52,13 +63,15 @@ const DonatePage = ({ donations, requests, orders, selectedMarker, setSelectedMa
   const activeOrders = orders.filter(o =>
     matchedDonations.some(d => d.orderId === o.id) && o.status !== 'delivered'
   );
-  const allMyOrders = orders.filter(o => matchedDonations.some(d => d.orderId === o.id));
+  // Only show the tracker for orders that aren't dismissed or long-delivered
+  const allMyOrders = orders.filter(o => matchedDonations.some(d => d.orderId === o.id) && (o.status !== 'delivered' || !o.isPaid));
   const availableRequests = requests.filter(r => !r.matched);
 
   const handleSelectReceiver = (receiver) => setSelectedReceiver(receiver);
 
   const handleConfirmOrder = async (confirmedItem) => {
-    const myDonation = myDonations[myDonations.length - 1];
+    // Pick the specific donation we want to match
+    const myDonation = donations.find(d => d.id === latestDonationId) || myDonations[myDonations.length - 1];
     if (!myDonation) { alert('Please submit a donation first'); return; }
     const { routeCoordinates, distanceKm } = await fetchRoute(myDonation.location, confirmedItem.location);
     await createOrder({
@@ -66,6 +79,7 @@ const DonatePage = ({ donations, requests, orders, selectedMarker, setSelectedMa
       billingSplit: confirmedItem.billingSplit, routeCoordinates, distanceKm
     });
     setSelectedReceiver(null);
+    setLatestDonationId(null);
   };
 
   const handlePayNow = (order) => setShowPayment(order);

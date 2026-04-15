@@ -28,32 +28,43 @@ const DonationForm = ({ user }) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const doc = {
-          foodType,
-          quantity: Number(quantity),
-          expiryTime: new Date(expiry).toISOString(),
-          matched: false,
-          userId: user?.id || null,
-          userName: user?.name || 'Anonymous',
-          location: new db.GeoPoint(
-            position.coords.latitude + (Math.random() * 0.01 - 0.005),
-            position.coords.longitude + (Math.random() * 0.01 - 0.005)
-          )
-        };
-
-        await db.addDoc('donations', doc);
-        // No auto-matching — user selects from NearbyList
-        setIsSubmitting(false);
-        setSubmitted(true);
-      }, (error) => {
-        alert("Location access needed. Error: " + error.message);
-        setIsSubmitting(false);
-      });
-    } else {
-      alert("Geolocation not supported");
+    const submitWithLocation = async (lat, lng) => {
+      const doc = {
+        foodType,
+        quantity: Number(quantity),
+        expiryTime: new Date(expiry).toISOString(),
+        matched: false,
+        userId: user?.id || null,
+        userName: user?.name || 'Anonymous',
+        location: { latitude: lat, longitude: lng }
+      };
+      await db.addDoc('donations', doc);
       setIsSubmitting(false);
+      setSubmitted(true);
+    };
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          // Success case with jitter
+          const lat = position.coords.latitude + (Math.random() * 0.01 - 0.005);
+          const lng = position.coords.longitude + (Math.random() * 0.01 - 0.005);
+          await submitWithLocation(lat, lng);
+        },
+        async (error) => {
+          console.warn("Geolocation failed, using fallback:", error.message);
+          // Fallback to Delhi with jitter
+          const lat = 28.6139 + (Math.random() * 0.01 - 0.005);
+          const lng = 77.2090 + (Math.random() * 0.01 - 0.005);
+          await submitWithLocation(lat, lng);
+        },
+        { timeout: 5000, enableHighAccuracy: false }
+      );
+    } else {
+      // Geolocation not supported, use fallback
+      const lat = 28.6139 + (Math.random() * 0.01 - 0.005);
+      const lng = 77.2090 + (Math.random() * 0.01 - 0.005);
+      await submitWithLocation(lat, lng);
     }
   };
 

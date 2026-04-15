@@ -124,3 +124,26 @@ const startMovement = (orderId) => {
     await db.updateDoc('orders', orderId, { deliveryProgress: progress });
   }, 400);
 };
+
+/**
+ * Recover orders that are in intermediate states but have lost their timers
+ * (e.g. from a page refresh).
+ */
+export const resumeStuckOrders = async (orders) => {
+  for (const order of orders) {
+    if (['confirmed', 'vehicle_assigned', 'picked_up', 'in_transit'].includes(order.status)) {
+      // Calculate how long ago the order was created
+      const age = Date.now() - new Date(order.createdAt).getTime();
+      // If it's been some time and it's not delivered, resume its simulation
+      // We use a safe check to see if it's already "moving" or needs a nudge
+      if (order.status === 'in_transit' && (order.deliveryProgress || 0) < 1) {
+        startMovement(order.id);
+      } else if (order.status !== 'delivered') {
+        // Re-trigger the simulation steps based on current status
+        if (order.status === 'confirmed') simulateDelivery(order.id);
+        else if (order.status === 'vehicle_assigned') setTimeout(() => advanceStatus(order.id, 'picked_up'), 2000);
+        else if (order.status === 'picked_up') setTimeout(() => { advanceStatus(order.id, 'in_transit'); startMovement(order.id); }, 2000);
+      }
+    }
+  }
+};

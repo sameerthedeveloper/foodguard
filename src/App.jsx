@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import { db } from './lib/firebase';
 import { auth } from './lib/auth';
 import { seedDemoData } from './lib/seed';
+import { resumeStuckOrders } from './lib/matching';
 import LandingPage from './pages/LandingPage';
 import DonatePage from './pages/DonatePage';
 import RequestPage from './pages/RequestPage';
@@ -43,6 +44,9 @@ function App() {
   const checkAllLoaded = () => {
     if (loadedRef.current.donations && loadedRef.current.requests && loadedRef.current.orders) {
       setLoading(false);
+      // Data is loaded, resume any progress that was interrupted
+      const data = db.readDB?.() || { orders: [] };
+      if (data.orders.length > 0) resumeStuckOrders(data.orders);
     }
   };
 

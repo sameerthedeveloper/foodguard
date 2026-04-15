@@ -64,7 +64,7 @@ const ConfirmOrderModal = ({ selectedItem, type, onConfirm, onClose }) => {
           <div className="modal-stats-row">
             <div className="modal-stat">
               <MapPin size={14} />
-              <span>{distance.toFixed(1)} km</span>
+              <span>{(distance ?? 0).toFixed(1)} km</span>
             </div>
             <div className="modal-stat">
               <Clock size={14} />

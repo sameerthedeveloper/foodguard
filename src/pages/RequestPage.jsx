@@ -18,6 +18,17 @@ const RequestPage = ({ donations, requests, orders, selectedMarker, setSelectedM
   const [selectedDonor, setSelectedDonor] = useState(null);
   const [showPayment, setShowPayment] = useState(null);
   const [impactOpen, setImpactOpen] = useState(false);
+  const [latestRequestId, setLatestRequestId] = useState(null);
+
+  // Update latest request ID when list changes
+  useEffect(() => {
+    const userReqs = user?.id ? requests.filter(r => r.userId === user.id) : [];
+    const myReqs = userReqs.length > 0 ? userReqs : requests;
+    const latest = myReqs.filter(r => !r.matched).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+    if (latest && latest.id !== latestRequestId) {
+      setLatestRequestId(latest.id);
+    }
+  }, [requests, user, latestRequestId]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -51,13 +62,15 @@ const RequestPage = ({ donations, requests, orders, selectedMarker, setSelectedM
   const activeOrders = orders.filter(o =>
     matchedRequests.some(r => r.orderId === o.id) && o.status !== 'delivered'
   );
-  const allMyOrders = orders.filter(o => matchedRequests.some(r => r.orderId === o.id));
+  // Only show the tracker for orders that aren't dismissed or long-delivered
+  const allMyOrders = orders.filter(o => matchedRequests.some(r => r.orderId === o.id) && (o.status !== 'delivered' || !o.isPaid));
   const availableDonations = donations.filter(d => !d.matched);
 
   const handleSelectDonor = (donor) => setSelectedDonor(donor);
 
   const handleConfirmOrder = async (confirmedItem) => {
-    const myRequest = myRequests[myRequests.length - 1];
+    // Pick the specific request we want to match
+    const myRequest = requests.find(r => r.id === latestRequestId) || myRequests[myRequests.length - 1];
     if (!myRequest) { alert('Please submit a food request first'); return; }
     const { routeCoordinates, distanceKm } = await fetchRoute(confirmedItem.location, myRequest.location);
     await createOrder({
@@ -65,6 +78,7 @@ const RequestPage = ({ donations, requests, orders, selectedMarker, setSelectedM
       billingSplit: confirmedItem.billingSplit, routeCoordinates, distanceKm
     });
     setSelectedDonor(null);
+    setLatestRequestId(null);
   };
 
   const handlePayNow = (order) => setShowPayment(order);

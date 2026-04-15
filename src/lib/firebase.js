@@ -93,6 +93,7 @@ let _currentUserId = null;
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 export const db = {
+  readDB,
   setUserId(uid) { _currentUserId = uid; },
 
   async addDoc(collectionName, data) {

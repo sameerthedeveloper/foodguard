@@ -4,14 +4,13 @@ import { MapPin, Clock, Users, Utensils, ChevronRight, Zap } from 'lucide-react'
 
 const NearbyList = ({ items, userLocation, type, onSelect, targetQuantity, loading }) => {
   const [autoMatchedId, setAutoMatchedId] = useState(null);
-
-  if (!userLocation && !loading) return null;
+  const location = userLocation || { latitude: 28.6139, longitude: 77.2090 };
 
   // Calculate distances and sort by nearest
   const itemsWithDistance = items
     .map(item => {
       const dist = calculateDistance(
-        userLocation?.latitude || 0, userLocation?.longitude || 0,
+        location.latitude, location.longitude,
         item.location.latitude, item.location.longitude
       );
       const qty = type === 'donors' ? (item.quantity || 10) : (item.peopleCount || 10);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -28,10 +28,11 @@ const ProfilePage = ({ theme, toggleTheme, orders = [], loading }) => {
   const user = auth.getUser();
   const [accepting, setAccepting] = useState(user?.accepting ?? true);
 
-  if (!user) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (!user) navigate('/');
+  }, [user, navigate]);
+
+  if (!user) return null;
 
   const isReceiver = user.role === 'receiver';
 
