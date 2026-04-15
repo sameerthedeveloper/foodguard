@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ORDER_STATUSES, getStatusIndex } from '../lib/delivery';
 import { Phone, Star, Send, Heart } from 'lucide-react';
+import { db } from '../lib/firebase';
 
 const InlineTracker = ({ order, onPayNow, viewSide }) => {
   // viewSide: 'donor' or 'receiver' — determines what UI to show
@@ -18,21 +19,40 @@ const InlineTracker = ({ order, onPayNow, viewSide }) => {
     return () => clearInterval(interval);
   }, [order]);
 
-  // Auto-dismiss delivered+paid orders after 5 seconds
-  useEffect(() => {
-    if (order?.status === 'delivered' && order?.isPaid) {
-      const timer = setTimeout(() => setDismissed(true), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [order?.status, order?.isPaid]);
+  const [dismissAnim, setDismissAnim] = useState({ duration: 0, started: false });
 
-  // Auto-dismiss free deliveries (donor paid) after 8 seconds even without payment
   useEffect(() => {
-    if (order?.status === 'delivered' && order?.billingSplit === 'donor' && viewSide === 'receiver') {
-      const timer = setTimeout(() => setDismissed(true), 8000);
-      return () => clearTimeout(timer);
+    if (order?.status === 'delivered') {
+      // If it was already dismissed previously, hide instantly without animation
+      if (order?.trackerDismissed) {
+        setDismissed(true);
+        return;
+      }
+
+      let duration = 0;
+      if (order?.isPaid) {
+        duration = 8000;
+      } else if (order?.billingSplit === 'donor' && viewSide === 'receiver') {
+        duration = 12000;
+      }
+      
+      if (duration > 0) {
+        setDismissAnim({ duration, started: false });
+        const startTimer = setTimeout(() => setDismissAnim({ duration, started: true }), 50);
+        
+        const exitTimer = setTimeout(() => {
+          setDismissed(true);
+          // Persist dismiss state so it won't show again on reload
+          db.updateDoc('orders', order.id, { trackerDismissed: true });
+        }, duration);
+        
+        return () => {
+          clearTimeout(startTimer);
+          clearTimeout(exitTimer);
+        };
+      }
     }
-  }, [order?.status, order?.billingSplit, viewSide]);
+  }, [order?.status, order?.isPaid, order?.billingSplit, viewSide, order?.trackerDismissed, order?.id]);
 
   if (!order || dismissed) return null;
 
@@ -208,6 +228,19 @@ const InlineTracker = ({ order, onPayNow, viewSide }) => {
       {isDelivered && !iNeedToPay && viewSide === 'receiver' && !donorPays && isPaid && (
         <div className="tracker-paid-badge">
           ✅ Delivery complete
+        </div>
+      )}
+
+      {/* Auto-Dismiss Countdown Bar */}
+      {dismissAnim.duration > 0 && (
+        <div style={{ height: '3px', background: 'rgba(255,255,255,0.05)', width: '100%', overflow: 'hidden', marginTop: '0.5rem', borderRadius: '0 0 var(--r-sm) var(--r-sm)' }}>
+          <div style={{
+            height: '100%',
+            background: 'var(--neon-green)',
+            width: dismissAnim.started ? '0%' : '100%',
+            transition: dismissAnim.started ? `width ${dismissAnim.duration}ms linear` : 'none',
+            boxShadow: '0 0 8px rgba(0,255,159,0.5)'
+          }} />
         </div>
       )}
     </div>

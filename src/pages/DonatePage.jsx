@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Leaf, ArrowLeft, Trash2, Sun, Moon } from 'lucide-react';
 import ImpactDashboard from '../components/ImpactDashboard';
 import MapViewer from '../components/MapViewer';
@@ -74,7 +75,13 @@ const DonatePage = ({ donations, requests, orders, selectedMarker, setSelectedMa
   const handleClear = async () => { if (window.confirm('Clear all data?')) await db.clearAll(); };
 
   return (
-    <div className="app-wrapper">
+    <motion.div
+      className="app-wrapper"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 0 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+    >
       <div className="map-layer">
         <MapViewer donations={donations} requests={requests} orders={orders}
           selectedMarker={selectedMarker} setSelectedMarker={setSelectedMarker} theme={theme} />
@@ -88,7 +95,7 @@ const DonatePage = ({ donations, requests, orders, selectedMarker, setSelectedMa
               <Leaf className="color-neon-green" size={22} />
               <span>FOOD<span className="brand-highlight">GUARD</span></span>
             </div>
-            <span className="page-badge page-badge-green">Donor</span>
+            <span className="page-badge page-badge-blue">Donor</span>
           </div>
           <div className="header-right-group">
             <button onClick={toggleTheme} className="btn-theme" title="Toggle Theme">
@@ -100,40 +107,53 @@ const DonatePage = ({ donations, requests, orders, selectedMarker, setSelectedMa
       </div>
 
       <div className="panel-container action-panel">
-        {allMyOrders.length > 0 && (
-          <div className="panel-section">
-            {allMyOrders.map(order => (
-              <InlineTracker key={order.id} order={order} onPayNow={handlePayNow} viewSide="donor" />
-            ))}
+        <div className="panel-toggle-group">
+          <button className={`panel-toggle-btn ${!impactOpen ? 'active' : ''}`} onClick={() => setImpactOpen(false)}>My Food</button>
+          <button className={`panel-toggle-btn ${impactOpen ? 'active' : ''}`} onClick={() => setImpactOpen(true)}>Impact</button>
+        </div>
+        <div className="form-separator" />
+
+        {impactOpen ? (
+          <ImpactDashboard orders={orders} isDonor={true} inline={true} />
+        ) : (
+          <div className="panel-scroll-area">
+            {allMyOrders.length > 0 && (
+              <div className="panel-section">
+                <div className="panel-title-row">
+                  <h2 className="panel-title"><span className="panel-title-dot dot-yellow" />Active Deliveries</h2>
+                </div>
+                {allMyOrders.map(order => (
+                  <InlineTracker key={order.id} order={order}
+                    onPay={() => handlePayNow(order)}
+                    isDonorSide={true} />
+                ))}
+              </div>
+            )}
+
+            {activeOrders.length === 0 && (
+              <>
+                <div className="panel-title-row">
+                  <h2 className="panel-title"><span className="panel-title-dot dot-green" />List Surplus Food</h2>
+                </div>
+                <DonationForm user={user} />
+              </>
+            )}
+
+            {myDonations.length > 0 && activeOrders.length === 0 && (
+              <>
+                <div className="form-separator" style={{ margin: '1rem 0' }} />
+                <NearbyList items={availableRequests} userLocation={userLocation} type="receivers" onSelect={handleSelectReceiver} targetQuantity={myDonations[myDonations.length - 1]?.quantity} loading={loading} />
+              </>
+            )}
           </div>
-        )}
-
-        {activeOrders.length === 0 && (
-          <>
-            <div className="panel-title-row">
-              <h2 className="panel-title"><span className="panel-title-dot dot-green" />Donate Food</h2>
-            </div>
-            <DonationForm user={user} />
-          </>
-        )}
-
-        {myDonations.length > 0 && activeOrders.length === 0 && (
-          <>
-            <div className="form-separator" style={{ margin: '1rem 0' }} />
-            <NearbyList items={availableRequests} userLocation={userLocation} type="receivers" onSelect={handleSelectReceiver} />
-          </>
         )}
       </div>
 
       {selectedReceiver && (
         <ConfirmOrderModal selectedItem={selectedReceiver} type="receivers" onConfirm={handleConfirmOrder} onClose={() => setSelectedReceiver(null)} />
       )}
-      {showPayment && (
-        <PaymentModal order={showPayment} onClose={() => setShowPayment(null)} onPaymentComplete={handlePaymentComplete} />
-      )}
-
-      <ImpactDashboard orders={orders} donations={donations} isOpen={impactOpen} onToggle={() => setImpactOpen(o => !o)} />
-    </div>
+      {showPayment && <PaymentModal order={showPayment} onClose={() => setShowPayment(null)} onPaymentComplete={handlePaymentComplete} />}
+    </motion.div>
   );
 };
 

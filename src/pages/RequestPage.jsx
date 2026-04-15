@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Leaf, ArrowLeft, Trash2, Sun, Moon } from 'lucide-react';
 import ImpactDashboard from '../components/ImpactDashboard';
 import MapViewer from '../components/MapViewer';
@@ -73,7 +74,13 @@ const RequestPage = ({ donations, requests, orders, selectedMarker, setSelectedM
   const handleClear = async () => { if (window.confirm('Clear all data?')) await db.clearAll(); };
 
   return (
-    <div className="app-wrapper">
+    <motion.div
+      className="app-wrapper"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 0 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+    >
       <div className="map-layer">
         <MapViewer donations={donations} requests={requests} orders={orders}
           selectedMarker={selectedMarker} setSelectedMarker={setSelectedMarker} theme={theme} />
@@ -99,40 +106,53 @@ const RequestPage = ({ donations, requests, orders, selectedMarker, setSelectedM
       </div>
 
       <div className="panel-container action-panel">
-        {allMyOrders.length > 0 && (
-          <div className="panel-section">
-            {allMyOrders.map(order => (
-              <InlineTracker key={order.id} order={order} onPayNow={handlePayNow} viewSide="receiver" />
-            ))}
+        <div className="panel-toggle-group">
+          <button className={`panel-toggle-btn ${!impactOpen ? 'active' : ''}`} onClick={() => setImpactOpen(false)}>My Requests</button>
+          <button className={`panel-toggle-btn ${impactOpen ? 'active' : ''}`} onClick={() => setImpactOpen(true)}>Impact</button>
+        </div>
+        <div className="form-separator" />
+
+        {impactOpen ? (
+          <ImpactDashboard orders={orders} isDonor={false} inline={true} />
+        ) : (
+          <div className="panel-scroll-area">
+            {allMyOrders.length > 0 && (
+              <div className="panel-section">
+                <div className="panel-title-row">
+                  <h2 className="panel-title"><span className="panel-title-dot dot-yellow" />Active Deliveries</h2>
+                </div>
+                {allMyOrders.map(order => (
+                  <InlineTracker key={order.id} order={order}
+                    onPay={() => handlePayNow(order)}
+                    isDonorSide={false} />
+                ))}
+              </div>
+            )}
+
+            {activeOrders.length === 0 && (
+              <>
+                <div className="panel-title-row">
+                  <h2 className="panel-title"><span className="panel-title-dot dot-red" />Request Food</h2>
+                </div>
+                <RequestForm user={user} />
+              </>
+            )}
+
+            {myRequests.length > 0 && activeOrders.length === 0 && (
+              <>
+                <div className="form-separator" style={{ margin: '1rem 0' }} />
+                <NearbyList items={availableDonations} userLocation={userLocation} type="donors" onSelect={handleSelectDonor} targetQuantity={myRequests[myRequests.length - 1]?.peopleCount} loading={loading} />
+              </>
+            )}
           </div>
-        )}
-
-        {activeOrders.length === 0 && (
-          <>
-            <div className="panel-title-row">
-              <h2 className="panel-title"><span className="panel-title-dot dot-red" />Request Food</h2>
-            </div>
-            <RequestForm user={user} />
-          </>
-        )}
-
-        {myRequests.length > 0 && activeOrders.length === 0 && (
-          <>
-            <div className="form-separator" style={{ margin: '1rem 0' }} />
-            <NearbyList items={availableDonations} userLocation={userLocation} type="donors" onSelect={handleSelectDonor} />
-          </>
         )}
       </div>
 
       {selectedDonor && (
         <ConfirmOrderModal selectedItem={selectedDonor} type="donors" onConfirm={handleConfirmOrder} onClose={() => setSelectedDonor(null)} />
       )}
-      {showPayment && (
-        <PaymentModal order={showPayment} onClose={() => setShowPayment(null)} onPaymentComplete={handlePaymentComplete} />
-      )}
-
-      <ImpactDashboard orders={orders} donations={donations} isOpen={impactOpen} onToggle={() => setImpactOpen(o => !o)} />
-    </div>
+      {showPayment && <PaymentModal order={showPayment} onClose={() => setShowPayment(null)} onPaymentComplete={handlePaymentComplete} />}
+    </motion.div>
   );
 };
 

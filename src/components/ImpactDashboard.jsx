@@ -81,7 +81,7 @@ const StatCard = ({ icon: Icon, label, value, unit, color, increment, incrementL
 };
 
 /* ── Main component ── */
-const ImpactDashboard = ({ orders = [], donations = [], isOpen, onToggle }) => {
+const ImpactDashboard = ({ orders = [], donations = [], isOpen, onToggle, inline }) => {
   const [stats, setStats] = useState({
     mealsSaved: 0,
     co2Reduced: 0,
@@ -138,13 +138,15 @@ const ImpactDashboard = ({ orders = [], donations = [], isOpen, onToggle }) => {
   return (
     <>
       {/* Toggle tab */}
-      <button className="impact-toggle" onClick={onToggle} title="Impact Dashboard">
-        <TrendingUp size={16} />
-        <span className="impact-toggle-label">Impact</span>
-      </button>
+      {!inline && (
+        <button className="impact-toggle" onClick={onToggle} title="Impact Dashboard">
+          <TrendingUp size={16} />
+          <span className="impact-toggle-label">Impact</span>
+        </button>
+      )}
 
       {/* Panel */}
-      <div className={`impact-dashboard ${isOpen ? 'impact-open' : ''}`}>
+      <div className={`impact-dashboard ${isOpen ? 'impact-open' : ''} ${inline ? 'impact-inline' : ''}`}>
         <div className="impact-header">
           <div className="impact-header-left">
             <Zap size={16} className="color-neon-yellow" />

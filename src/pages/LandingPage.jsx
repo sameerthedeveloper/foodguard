@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Leaf, Heart, HandHeart, ArrowRight, Truck, CreditCard, Radio, Shield, MapPin, Sun, Moon, User, LogOut } from 'lucide-react';
 import LoginModal from '../components/LoginModal';
 import { auth } from '../lib/auth';
@@ -20,7 +21,13 @@ const LandingPage = ({ theme, toggleTheme, user }) => {
   };
 
   return (
-    <div className="landing-wrapper">
+    <motion.div
+      className="landing-wrapper"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 0 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+    >
       {/* Top-right controls */}
       <div className="landing-top-controls">
         <button className="landing-theme-toggle" onClick={toggleTheme} title="Toggle Theme">
@@ -52,13 +59,14 @@ const LandingPage = ({ theme, toggleTheme, user }) => {
         )}
       </div>
 
-      <div className="landing-bg">
-        <div className="grid-overlay" />
-        <div className="glow-orb glow-orb-green" />
-        <div className="glow-orb glow-orb-red" />
-      </div>
+      <div className="landing-hero">
+        <div className="landing-bg">
+          <div className="grid-overlay" />
+          <div className="glow-orb glow-orb-green" />
+          <div className="glow-orb glow-orb-red" />
+        </div>
 
-      <div className="landing-content">
+        <div className="landing-content">
         <div className="landing-brand">
           <div className="landing-logo-wrap">
             <Leaf className="color-neon-green" size={36} />
@@ -126,11 +134,66 @@ const LandingPage = ({ theme, toggleTheme, user }) => {
         </div>
 
         <p className="landing-footer-text">Zero food wasted. Zero hunger ignored.</p>
+        </div>
+      </div>
+
+      <div className="landing-stats-section">
+        <div className="stats-header">
+          <h2>The Paradox of Plenty</h2>
+          <p>India produces enough food to feed everyone, yet millions go hungry while millions of tonnes are wasted every year.</p>
+        </div>
+        
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-number red">111<span style={{fontSize: '2rem'}}>/125</span></div>
+            <div className="stat-label">Global Hunger Index</div>
+            <div className="stat-desc">India ranked 111th in the 2023 GHI, indicating a serious state of undernourishment and hunger.</div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-number yellow">74<span style={{fontSize: '2rem'}}>M+</span></div>
+            <div className="stat-label">Tonnes of Food Wasted</div>
+            <div className="stat-desc">An estimated 74 million tonnes of food is lost or wasted across India annually.</div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-number green">16<span style={{fontSize: '2rem'}}>%</span></div>
+            <div className="stat-label">Population Undernourished</div>
+            <div className="stat-desc">Due to supply chain inefficiencies, 16.6% of the population faces chronic lack of food access.</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="landing-solution-section">
+        <div className="solution-header">
+          <h2>How FoodGuard Steps In</h2>
+          <p>We bridge the gap between surplus and scarcity using real-time technology and community-driven logistics.</p>
+        </div>
+        
+        <div className="solution-grid">
+          <div className="solution-card">
+            <div className="solution-icon color-neon-green"><MapPin size={32} /></div>
+            <h3>Smart Proximity Matching</h3>
+            <p>Our algorithm instantly connects food donors with the nearest available verified NGOs, minimizing transit time and preserving food quality.</p>
+          </div>
+          
+          <div className="solution-card">
+            <div className="solution-icon color-neon-blue"><Truck size={32} /></div>
+            <h3>Automated Fleet Logistics</h3>
+            <p>No transport? No problem. We automatically dispatch the right-sized vehicle from our partner network to pick up and deliver the food.</p>
+          </div>
+          
+          <div className="solution-card">
+            <div className="solution-icon color-neon-purple"><CreditCard size={32} /></div>
+            <h3>Flexible Split Billing</h3>
+            <p>Delivery costs shouldn't be a barrier. Donors and receivers can choose to split the delivery fee, or cover it entirely, making the process frictionless.</p>
+          </div>
+        </div>
       </div>
 
       {/* Login Modal */}
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={handleLogin} />}
-    </div>
+    </motion.div>
   );
 };
 

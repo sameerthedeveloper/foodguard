@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { db } from './lib/firebase';
 import { auth } from './lib/auth';
 import { seedDemoData } from './lib/seed';
@@ -7,6 +8,22 @@ import LandingPage from './pages/LandingPage';
 import DonatePage from './pages/DonatePage';
 import RequestPage from './pages/RequestPage';
 import ProfilePage from './pages/ProfilePage';
+
+const AnimatedRoutes = ({ theme, toggleTheme, user, orders, donations, loading, newDataFlash, sharedProps }) => {
+  const location = useLocation();
+  return (
+    <div className={newDataFlash ? 'new-data-glow' : ''}>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<LandingPage theme={theme} toggleTheme={toggleTheme} user={user} orders={orders} donations={donations} loading={loading} />} />
+          <Route path="/donate" element={<DonatePage {...sharedProps} />} />
+          <Route path="/request" element={<RequestPage {...sharedProps} />} />
+          <Route path="/profile" element={<ProfilePage theme={theme} toggleTheme={toggleTheme} orders={orders} loading={loading} />} />
+        </Routes>
+      </AnimatePresence>
+    </div>
+  );
+};
 
 function App() {
   const [donations, setDonations] = useState([]);
@@ -21,6 +38,7 @@ function App() {
   const loadedRef = useRef({ donations: false, requests: false, orders: false });
   const isFirstLoad = useRef(true);
   const seeded = useRef(false);
+  const flashTimeoutRef = useRef(null);
 
   const checkAllLoaded = () => {
     if (loadedRef.current.donations && loadedRef.current.requests && loadedRef.current.orders) {
@@ -40,7 +58,8 @@ function App() {
         checkAllLoaded();
       } else if (!isFirstLoad.current) {
         setNewDataFlash(true);
-        setTimeout(() => setNewDataFlash(false), 1500);
+        if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+        flashTimeoutRef.current = setTimeout(() => setNewDataFlash(false), 1500);
       }
     };
 
@@ -93,23 +112,20 @@ function App() {
     theme, toggleTheme, user, loading, newDataFlash,
   };
 
+
+
   return (
     <Router>
-      {loading && (
-        <div className="data-loading-overlay">
-          <div className="loading-spinner" />
-          <p className="loading-text">Connecting to FoodGuard...</p>
-        </div>
-      )}
-
-      <div className={newDataFlash ? 'new-data-glow' : ''}>
-        <Routes>
-          <Route path="/" element={<LandingPage theme={theme} toggleTheme={toggleTheme} user={user} orders={orders} donations={donations} loading={loading} />} />
-          <Route path="/donate" element={<DonatePage {...sharedProps} />} />
-          <Route path="/request" element={<RequestPage {...sharedProps} />} />
-          <Route path="/profile" element={<ProfilePage theme={theme} toggleTheme={toggleTheme} orders={orders} />} />
-        </Routes>
-      </div>
+      <AnimatedRoutes 
+        theme={theme} 
+        toggleTheme={toggleTheme} 
+        user={user} 
+        orders={orders} 
+        donations={donations} 
+        loading={loading} 
+        newDataFlash={newDataFlash} 
+        sharedProps={sharedProps} 
+      />
     </Router>
   );
 }

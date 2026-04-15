@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   ArrowLeft, Shield, MapPin, Phone, Clock, Users, Star,
   CheckCircle, XCircle, Utensils, TrendingUp, Truck,
@@ -22,7 +23,7 @@ const ACTIVITY_TIMELINE = [
   { id: 5, event: 'Joined FoodGuard platform', time: 'Aug 2025', icon: '🎉', color: 'var(--neon-purple)' },
 ];
 
-const ProfilePage = ({ theme, toggleTheme, orders = [] }) => {
+const ProfilePage = ({ theme, toggleTheme, orders = [], loading }) => {
   const navigate = useNavigate();
   const user = auth.getUser();
   const [accepting, setAccepting] = useState(user?.accepting ?? true);
@@ -52,7 +53,13 @@ const ProfilePage = ({ theme, toggleTheme, orders = [] }) => {
   };
 
   return (
-    <div className="profile-wrapper">
+    <motion.div
+      className="profile-wrapper"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 0 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+    >
       {/* Header */}
       <div className="profile-header">
         <div className="header-content">
@@ -111,34 +118,40 @@ const ProfilePage = ({ theme, toggleTheme, orders = [] }) => {
 
         {/* ── Stats Grid ── */}
         <div className="profile-stats-grid">
-          <div className="profile-stat-card">
-            <div className="profile-stat-icon" style={{ color: 'var(--neon-green)', background: 'rgba(0,255,159,0.06)' }}>
-              <Utensils size={18} />
-            </div>
-            <div className="profile-stat-value">{mealsReceived.toLocaleString()}</div>
-            <div className="profile-stat-label">Meals {isReceiver ? 'Received' : 'Donated'}</div>
-          </div>
-          <div className="profile-stat-card">
-            <div className="profile-stat-icon" style={{ color: 'var(--neon-purple)', background: 'rgba(168,85,247,0.06)' }}>
-              <Truck size={18} />
-            </div>
-            <div className="profile-stat-value">{deliveriesCount}</div>
-            <div className="profile-stat-label">Deliveries</div>
-          </div>
-          <div className="profile-stat-card">
-            <div className="profile-stat-icon" style={{ color: 'var(--neon-yellow)', background: 'rgba(255,194,51,0.06)' }}>
-              <Star size={18} />
-            </div>
-            <div className="profile-stat-value">4.8</div>
-            <div className="profile-stat-label">Rating</div>
-          </div>
-          <div className="profile-stat-card">
-            <div className="profile-stat-icon" style={{ color: 'var(--neon-blue)', background: 'rgba(59,130,246,0.06)' }}>
-              <Leaf size={18} />
-            </div>
-            <div className="profile-stat-value">{(mealsReceived * 2.5).toLocaleString()}</div>
-            <div className="profile-stat-label">CO₂ Saved (kg)</div>
-          </div>
+          {loading ? [1,2,3,4].map(i => (
+            <div key={i} className="skeleton skeleton-stat" />
+          )) : (
+            <>
+              <div className="profile-stat-card">
+                <div className="profile-stat-icon" style={{ color: 'var(--neon-green)', background: 'rgba(0,255,159,0.06)' }}>
+                  <Utensils size={18} />
+                </div>
+                <div className="profile-stat-value">{mealsReceived.toLocaleString()}</div>
+                <div className="profile-stat-label">Meals {isReceiver ? 'Received' : 'Donated'}</div>
+              </div>
+              <div className="profile-stat-card">
+                <div className="profile-stat-icon" style={{ color: 'var(--neon-purple)', background: 'rgba(168,85,247,0.06)' }}>
+                  <Truck size={18} />
+                </div>
+                <div className="profile-stat-value">{deliveriesCount}</div>
+                <div className="profile-stat-label">Deliveries</div>
+              </div>
+              <div className="profile-stat-card">
+                <div className="profile-stat-icon" style={{ color: 'var(--neon-yellow)', background: 'rgba(255,194,51,0.06)' }}>
+                  <Star size={18} />
+                </div>
+                <div className="profile-stat-value">4.8</div>
+                <div className="profile-stat-label">Rating</div>
+              </div>
+              <div className="profile-stat-card">
+                <div className="profile-stat-icon" style={{ color: 'var(--neon-blue)', background: 'rgba(59,130,246,0.06)' }}>
+                  <Leaf size={18} />
+                </div>
+                <div className="profile-stat-value">{(mealsReceived * 2.5).toLocaleString()}</div>
+                <div className="profile-stat-label">CO₂ Saved (kg)</div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── Reliability Score (Receiver only) ── */}
@@ -248,7 +261,7 @@ const ProfilePage = ({ theme, toggleTheme, orders = [] }) => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
