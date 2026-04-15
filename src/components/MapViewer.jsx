@@ -93,8 +93,8 @@ const MapViewer = ({ donations, requests, orders = [], selectedMarker, setSelect
     const idx = Math.min(Math.floor(progress * (total - 1)), total - 2);
     const sub = (progress * (total - 1)) - idx;
     return [
-      route[idx][0] + (route[idx + 1][0] - route[idx][0]) * sub,
-      route[idx][1] + (route[idx + 1][1] - route[idx][1]) * sub
+      route[idx].lat + (route[idx + 1].lat - route[idx].lat) * sub,
+      route[idx].lng + (route[idx + 1].lng - route[idx].lng) * sub
     ];
   };
 

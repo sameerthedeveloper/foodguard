@@ -69,7 +69,7 @@ export const fetchRoute = async (fromLoc, toLoc) => {
     const res = await fetch(url);
     const data = await res.json();
     if (data.routes && data.routes.length > 0) {
-      const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+      const coords = data.routes[0].geometry.coordinates.map(c => ({ lat: c[1], lng: c[0] }));
       const distKm = (data.routes[0].distance / 1000).toFixed(2);
       return { routeCoordinates: coords, distanceKm: distKm };
     }
@@ -84,8 +84,8 @@ export const fetchRoute = async (fromLoc, toLoc) => {
   ) * 111; // rough km
   return {
     routeCoordinates: [
-      [fromLoc.latitude, fromLoc.longitude],
-      [toLoc.latitude, toLoc.longitude]
+      { lat: fromLoc.latitude, lng: fromLoc.longitude },
+      { lat: toLoc.latitude, lng: toLoc.longitude }
     ],
     distanceKm: Number.isFinite(dist) ? dist.toFixed(2) : '1.00'
   };
