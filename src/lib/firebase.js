@@ -4,13 +4,13 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, onSnapshot, getDocs } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDGm3VvhsFDf3PGKFqKZ1kdmrgMyuqHHLk",
-  authDomain: "foodguard-93907.firebaseapp.com",
-  projectId: "foodguard-93907",
-  storageBucket: "foodguard-93907.firebasestorage.app",
-  messagingSenderId: "65787933809",
-  appId: "1:65787933809:web:667c84acc8ee7910a697d0",
-  measurementId: "G-6GDH8EXVM4",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
