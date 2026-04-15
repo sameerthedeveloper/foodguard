@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /donations/{donationId} {
+      // Anyone can read donations to display the map correctly
+      allow read: if true;
+      // Anyone logged in can create a donation
+      allow create: if isAuthenticated();
+      // Anyone logged in can update a donation (e.g. tracking matching status)
+      allow update: if isAuthenticated();
+      // Only the originating donor can delete the donation record
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    match /requests/{requestId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    match /orders/{orderId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      // Delivery logic relies on history. Order deletion is blocked entirely!
+      allow delete: if false; 
+    }
+  }
+}

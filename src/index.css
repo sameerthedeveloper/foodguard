@@ -1,3 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface: rgba(14, 14, 22, 0.85);
+  --color-surface-solid: #0e0e16;
+  --color-bg: #06060b;
+  --color-neon-green: #00ff9f;
+  --color-neon-red: #ff4d6a;
+  --color-neon-yellow: #ffc233;
+  --color-neon-blue: #3b82f6;
+  --color-neon-purple: #a855f7;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* ══════════════════════════════════════════════════════════ */
@@ -1075,8 +1088,8 @@ input[type="range"].red-range::-webkit-slider-thumb {
 /*  PROFILE PAGE                          */
 /* ═══════════════════════════════════════ */
 .profile-wrapper {
-  min-height: 100vh; background: var(--color-bg);
-  padding: 1.5rem; overflow-y: auto;
+  height: 100vh; background: var(--color-bg);
+  padding: 1.5rem; overflow-y: auto; overflow-x: hidden;
 }
 .profile-header { margin-bottom: 1.5rem; }
 .profile-page-title { font-size: 1.125rem; font-weight: 800; }
