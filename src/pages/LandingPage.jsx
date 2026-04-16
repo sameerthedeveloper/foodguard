@@ -93,7 +93,7 @@ const LandingPage = ({ theme, toggleTheme, user }) => {
           <div className="feature-item"><Shield size={16} className="color-neon-red" /><span>Secure Payments</span></div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+        <div className="role-cards">
           <button className="role-card role-card-donor" onClick={() => {
             if (user) {
               auth.updateProfile({ role: 'donor' });
@@ -143,7 +143,7 @@ const LandingPage = ({ theme, toggleTheme, user }) => {
           <p>India produces enough food to feed everyone, yet millions go hungry while millions of tonnes are wasted every year.</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-number red">111<span style={{fontSize: '2rem'}}>/125</span></div>
             <div className="stat-label">Global Hunger Index</div>
@@ -170,7 +170,7 @@ const LandingPage = ({ theme, toggleTheme, user }) => {
           <p>We bridge the gap between surplus and scarcity using real-time technology and community-driven logistics.</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="solution-grid">
           <div className="solution-card">
             <div className="solution-icon color-neon-green"><MapPin size={32} /></div>
             <h3>Smart Proximity Matching</h3>

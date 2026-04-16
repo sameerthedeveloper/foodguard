@@ -97,41 +97,42 @@ const ImpactDashboard = ({ orders = [], donations = [], isOpen, onToggle, inline
   useEffect(() => {
     const delivered = orders.filter(o => o.status === 'delivered');
     const count = delivered.length;
+    
+    // Community Baselines (global impact)
+    const baselineMeals = 1247;
+    const baselineCo2 = 3117.5;
+    const baselineDeliveries = 89;
 
-    if (count > prevDeliveredRef.current) {
-      const diff = count - prevDeliveredRef.current;
-      const newMeals = delivered.reduce((sum, o) => sum + (o.foodQuantity || 10), 0);
-      const newCo2 = +(newMeals * 2.5).toFixed(1); // ~2.5kg CO2 per meal saved
-      const mealDiff = diff * 10; // approximate per-order increment
+    const liveMeals = delivered.reduce((sum, o) => sum + (o.foodQuantity || 10), 0);
+    const liveCo2 = +(liveMeals * 2.5).toFixed(1);
+    
+    const totalMeals = baselineMeals + liveMeals;
+    const totalCo2 = +(baselineCo2 + liveCo2).toFixed(1);
+    const totalDeliveries = baselineDeliveries + count;
 
-      setIncrements({ meals: mealDiff, co2: +(mealDiff * 2.5).toFixed(0), deliveries: diff });
-      setStats(prev => ({
-        ...prev,
-        mealsSaved: newMeals,
-        co2Reduced: newCo2,
-        deliveriesCompleted: count,
-        dailyProgress: Math.min(count, prev.dailyGoal),
-        streak: prev.streak + diff,
-      }));
+    if (totalDeliveries > prevDeliveredRef.current && prevDeliveredRef.current > 0) {
+      // Something new was delivered!
+      const mealDiff = totalMeals - stats.mealsSaved;
+      setIncrements({ 
+        meals: mealDiff, 
+        co2: +(mealDiff * 2.5).toFixed(0), 
+        deliveries: totalDeliveries - prevDeliveredRef.current 
+      });
     }
-    prevDeliveredRef.current = count;
+
+    setStats(prev => ({
+      ...prev,
+      mealsSaved: totalMeals,
+      co2Reduced: totalCo2,
+      deliveriesCompleted: totalDeliveries,
+      dailyProgress: Math.min(count, prev.dailyGoal),
+      streak: 12 + count, // Static 12 day streak + active deliveries
+    }));
+
+    prevDeliveredRef.current = totalDeliveries;
   }, [orders]);
 
-  // Auto-seed some baseline stats so the dashboard looks alive on first load
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setStats(prev => ({
-        ...prev,
-        mealsSaved: prev.mealsSaved + 1247,
-        co2Reduced: +(prev.co2Reduced + 3117.5).toFixed(1),
-        deliveriesCompleted: prev.deliveriesCompleted + 89,
-        streak: 12,
-        dailyProgress: 34,
-      }));
-      setIncrements({ meals: 1247, co2: 3118, deliveries: 89 });
-    }, 600);
-    return () => clearTimeout(timer);
-  }, []);
+  // Stats are now derived from orders + baselines in the useEffect above
 
   const progressPct = Math.round((stats.dailyProgress / stats.dailyGoal) * 100);
 

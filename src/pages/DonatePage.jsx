@@ -8,6 +8,7 @@ import DonationForm from '../components/forms/DonationForm';
 import NearbyList from '../components/NearbyList';
 import ConfirmOrderModal from '../components/ConfirmOrderModal';
 import InlineTracker from '../components/InlineTracker';
+import CourierStatus from '../components/CourierStatus';
 import PaymentModal from '../components/PaymentModal';
 import { db } from '../lib/firebase';
 import { createOrder, fetchRoute } from '../lib/matching';
@@ -137,9 +138,14 @@ const DonatePage = ({ donations, requests, orders, selectedMarker, setSelectedMa
                   <h2 className="panel-title"><span className="panel-title-dot dot-yellow" />Active Deliveries</h2>
                 </div>
                 {allMyOrders.map(order => (
-                  <InlineTracker key={order.id} order={order}
-                    onPay={() => handlePayNow(order)}
-                    isDonorSide={true} />
+                  <div key={order.id}>
+                    <InlineTracker order={order}
+                      onPay={() => handlePayNow(order)}
+                      isDonorSide={true} />
+                    {order.deliveryId && (
+                      <CourierStatus orderId={order.deliveryId} inline={true} />
+                    )}
+                  </div>
                 ))}
               </div>
             )}

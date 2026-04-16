@@ -37,5 +37,14 @@ service cloud.firestore {
       // Delivery logic relies on history. Order deletion is blocked entirely!
       allow delete: if false; 
     }
+
+    // Borzo delivery tracking documents
+    // Only written by server-side (Vercel Functions via Firebase Admin SDK)
+    // Clients can read to show courier status — but CANNOT write directly
+    match /deliveries/{deliveryId} {
+      allow read: if isAuthenticated();
+      // Client writes are blocked — Admin SDK bypasses these rules server-side
+      allow write: if false;
+    }
   }
 }

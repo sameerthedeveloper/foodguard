@@ -118,7 +118,7 @@ const ProfilePage = ({ theme, toggleTheme, orders = [], loading }) => {
         </div>
 
         {/* ── Stats Grid ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="profile-stats-grid">
           {loading ? [1,2,3,4].map(i => (
             <div key={i} className="skeleton skeleton-stat" />
           )) : (
@@ -198,7 +198,7 @@ const ProfilePage = ({ theme, toggleTheme, orders = [], loading }) => {
         {isReceiver && (
           <div className="profile-section-card">
             <h3 className="profile-section-title"><Users size={16} /> Capacity & Preferences</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="profile-detail-grid">
               <div className="profile-detail-item">
                 <span className="profile-detail-label">Max Capacity</span>
                 <span className="profile-detail-value">{user.capacity || 200} servings/day</span>

@@ -49,8 +49,36 @@ export const createOrder = async ({ donation, request, billingSplit, routeCoordi
     await db.updateDoc('donations', donation.id, { matched: true, orderId: orderResult.id });
     await db.updateDoc('requests', request.id, { matched: true, orderId: orderResult.id });
 
-    // Start delivery simulation
-    simulateDelivery(orderResult.id);
+    // ──────────────────────────────────────────────────────────
+    // BORZO INTEGRATION (VERCEL EDGE DISPATCH)
+    // ──────────────────────────────────────────────────────────
+    try {
+      const borzoReq = await fetch('/api/createDelivery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: orderResult.id,
+          pickup: donation.location,
+          dropoff: request.location,
+          itemDetails: `FoodGuard Delivery: ${donation.foodType}`,
+          donorName: donation.name || "Donor",
+          donorPhone: "+91 9999999999",
+          receiverName: request.name || "Receiver",
+          receiverPhone: "+91 8888888888"
+        })
+      });
+      
+      if (!borzoReq.ok) {
+        console.warn("Borzo Edge API unreachable (If running native Vite locally, this happens). Falling back to internal Simulator.");
+        simulateDelivery(orderResult.id);
+      } else {
+        console.log("Borzo Delivery Initialized via Sandbox!");
+      }
+    } catch (e) {
+      console.warn("Vercel Edge not mounted. Using local simulator map flow...", e);
+      simulateDelivery(orderResult.id);
+    }
+    // ──────────────────────────────────────────────────────────
 
     return orderResult.id;
   } catch (error) {
@@ -91,7 +119,11 @@ export const fetchRoute = async (fromLoc, toLoc) => {
   };
 };
 
-const simulateDelivery = (orderId) => {
+const simulateDelivery = async (orderId) => {
+  const order = await db.getDoc('orders', orderId);
+  // Don't simulate if it's a real Borzo order
+  if (order?.deliveryId && !order.deliveryId.startsWith('mock-')) return;
+  
   setTimeout(() => advanceStatus(orderId, 'vehicle_assigned'), 3000);
   setTimeout(() => advanceStatus(orderId, 'picked_up'), 7000);
   setTimeout(() => {
@@ -132,7 +164,9 @@ const startMovement = (orderId) => {
 export const resumeStuckOrders = async (orders) => {
   for (const order of orders) {
     if (['confirmed', 'vehicle_assigned', 'picked_up', 'in_transit'].includes(order.status)) {
-      // Calculate how long ago the order was created
+      // Don't resume simulation if it's a real Borzo order
+      if (order.deliveryId && !order.deliveryId.startsWith('mock-')) continue;
+
       const age = Date.now() - new Date(order.createdAt).getTime();
       // If it's been some time and it's not delivered, resume its simulation
       // We use a safe check to see if it's already "moving" or needs a nudge
